@@ -29,9 +29,23 @@ jobs:
       - name: Extract source
         run: unzip SoftAimTrainer-source.zip -d source
 
-      - name: Fix Java and Kotlin versions
+      - name: Fix Android project
         run: |
-          cat > source/SoftAimTrainer/app/build.gradle.kts <<'EOF'
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path("source/SoftAimTrainer")
+          kt = root / "app/src/main/java/com/example/softaimtrainer/MainActivity.kt"
+
+          code = kt.read_text()
+          code = code.replace(
+              "setContentView(TrainerView())",
+              "setContentView(TrainerView(this))"
+          )
+          kt.write_text(code)
+
+          gradle_file = root / "app/build.gradle.kts"
+          gradle_file.write_text("""
           plugins {
               id("com.android.application")
               id("org.jetbrains.kotlin.android")
@@ -58,7 +72,10 @@ jobs:
                   jvmTarget = "17"
               }
           }
-          EOF
+          """.strip() + "\n")
+
+          print("Android project fixes applied.")
+          PY
 
       - name: Build APK
         run: |
