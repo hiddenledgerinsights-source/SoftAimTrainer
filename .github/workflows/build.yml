@@ -15,10 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract source
-        run: |
-          unzip SoftAimTrainer-source.zip -d source
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -29,6 +25,40 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+
+      - name: Extract source
+        run: unzip SoftAimTrainer-source.zip -d source
+
+      - name: Fix Java and Kotlin versions
+        run: |
+          cat > source/SoftAimTrainer/app/build.gradle.kts <<'EOF'
+          plugins {
+              id("com.android.application")
+              id("org.jetbrains.kotlin.android")
+          }
+
+          android {
+              namespace = "com.example.softaimtrainer"
+              compileSdk = 35
+
+              defaultConfig {
+                  applicationId = "com.example.softaimtrainer"
+                  minSdk = 23
+                  targetSdk = 35
+                  versionCode = 1
+                  versionName = "1.0"
+              }
+
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+          EOF
 
       - name: Build APK
         run: |
